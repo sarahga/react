@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 import './index.css';
 import AuthQuiz from './AuthQuiz';
 import * as serviceWorker from './serviceWorker';
+import {shuffle, sample} from 'underscore'
 
 const authors = [
     {
@@ -34,16 +35,39 @@ const authors = [
     }
 ];
 
-function getTurnDate({authors}){
+function getTurnDate(authors){
+    const allBooks = authors.reduce(function (p, c, i) {
+        return p.concat(c.books);
+    }, []);
+    const fourBooks = shuffle(allBooks).slice(0,4);
+    const answer = sample(fourBooks);
+
+    return {
+        books: fourBooks,
+        author: authors.find((author) =>
+            author.books.some((title) =>
+                title === answer)
+        )
+    }
     
 }
 
 const state = {
-    turnData: getTurnDate(authors)
-   
+    turnData: getTurnDate(authors),
+    highlight: ''
 }
 
-ReactDOM.render(<AuthQuiz {...state}/>, document.getElementById('root'));
+function onAnswerSelected(answer) {
+    const isCorrect = state.turnData.author.books.some((title) => title === answer);
+    state.highlight = isCorrect ? 'correct' : 'wrong';
+    render();
+}
+
+function render() {
+    ReactDOM.render(<AuthQuiz {...state} onAnswerSelected={onAnswerSelected}/>, document.getElementById('root'));
+}
+
+render();
 
 // If you want your app to work offline and load faster, you can change
 // unregister() to register() below. Note this comes with some pitfalls.
